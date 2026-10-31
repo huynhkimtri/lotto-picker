@@ -31,7 +31,7 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-section[id] { scroll-margin-top: 64px; }
+section[id], details[id] { scroll-margin-top: 64px; }
 
 .nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px;
   margin: 0 -16px 16px; padding: 8px 16px; border-bottom: 1px solid var(--line);
@@ -84,6 +84,11 @@ details.note { background: var(--soft); border: 1px solid color-mix(in srgb, var
   border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
 details.note summary { cursor: pointer; font-weight: 600; }
 details.note p { margin: 8px 0 0; }
+details.note h3 { font-size: 14px; margin: 14px 0 4px; }
+details.note ol { margin: 0; padding-left: 20px; }
+details.note li + li { margin-top: 4px; }
+details.note .ack { margin-top: 12px; }
+details.note .ack[hidden] { display: none; }
 
 .controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; }
 .controls label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
@@ -203,13 +208,28 @@ footer { margin-top: 24px; font-size: 13px; color: var(--muted); display: flex; 
     </div>
   </nav>
 
-  <details class="note">
-    <summary>Lưu ý trước khi dùng</summary>
+  <details class="note" id="terms">
+    <summary>Lưu ý trước khi dùng &amp; điều khoản sử dụng</summary>
     <p>Mỗi kỳ quay Vietlott là độc lập: máy không "nhớ" số nào đã về. Về toán học, mọi bộ 6 số đều có cùng xác suất trúng Jackpot
       (<b id="odds">1 / 8.145.060</b>). Các phân tích "số nóng", "số gan" bên dưới mô tả <i>quá khứ</i>, không làm tăng xác suất trúng.
       Phần <b>Kiểm chứng</b> ở cuối trang cho bạn tự kiểm tra điều này trên dữ liệu thật.</p>
     <p>Điều duy nhất có tác dụng thật là <b>tránh các bộ số nhiều người chọn</b> (ngày sinh ≤ 31, dãy liên tiếp…): xác suất trúng
       không đổi, nhưng nếu trúng thì ít khả năng phải chia giải với người khác.</p>
+    <h3>Điều khoản sử dụng</h3>
+    <ol>
+      <li><b>Chỉ dùng cá nhân, giải trí, phi thương mại.</b></li>
+      <li><b>Không phải dịch vụ dự đoán.</b> App không đảm bảo trúng thưởng và không phải lời khuyên tài chính.</li>
+      <li><b>Không lạm dụng:</b> không dùng app để bán "số đẹp" hay làm dịch vụ soi cầu thu phí, không gắn vào hoạt động
+        cờ bạc trái phép, không dùng công cụ tự động gửi yêu cầu liên tục làm quá tải nguồn dữ liệu.</li>
+      <li><b>Chỉ dành cho người từ 18 tuổi trở lên</b> — pháp luật Việt Nam cấm bán vé xổ số cho người dưới 18 tuổi.</li>
+      <li><b>Chơi có trách nhiệm:</b> chỉ chơi bằng số tiền bạn sẵn sàng mất. Nếu thấy khó kiểm soát việc mua vé,
+        hãy dừng lại và tìm người thân hoặc chuyên gia hỗ trợ.</li>
+      <li><b>Không liên quan đến Vietlott.</b> App không thuộc và không được Công ty TNHH MTV Xổ số Điện toán Việt Nam
+        (Vietlott) bảo trợ; chỉ dùng dữ liệu kết quả công khai. "Vietlott", "Mega 6/45", "Power 6/55" là tên của Vietlott.</li>
+      <li><b>Quyền riêng tư:</b> ngày sinh, họ tên và các lựa chọn chỉ lưu trên trình duyệt của bạn, không gửi đi đâu.</li>
+      <li>Mã nguồn thuộc bản quyền của tác giả; không sao chép, chỉnh sửa hay phát hành lại khi chưa được phép.</li>
+    </ol>
+    <p class="ack" id="termsAck"><button class="primary" id="termsOk">Tôi đã đủ 18 tuổi và đồng ý</button></p>
   </details>
 
   <section class="card" id="s-numerology" style="margin-bottom:16px">
@@ -366,7 +386,8 @@ footer { margin-top: 24px; font-size: 13px; color: var(--muted); display: flex; 
     <span>Dữ liệu: <a id="srcLink" href="https://github.com/vietvudanh/vietlott-data" target="_blank" rel="noopener">vietvudanh/vietlott-data</a> (cập nhật hằng ngày).</span>
     <button id="reload">Tải lại dữ liệu</button>
     <label>Hoặc nhập file (JSONL / CSV <code>YYYY-MM-DD,n1,…,n6</code>): <input type="file" id="importFile" accept=".jsonl,.json,.csv,.txt"></label>
-    <span style="flex-basis:100%">© 2026 Huỳnh Kim Trí. Bảo lưu mọi quyền — không sao chép, chỉnh sửa hay phát hành lại khi chưa được phép.</span>
+    <span style="flex-basis:100%">© 2026 Huỳnh Kim Trí. Bảo lưu mọi quyền — không sao chép, chỉnh sửa hay phát hành lại khi chưa được phép.
+      · <a href="#terms" id="termsLink">Điều khoản sử dụng</a> · Không liên quan đến Vietlott. Dành cho người từ 18 tuổi.</span>
   </footer>
 </div>
 <button class="totop" id="totop" aria-label="Lên đầu trang" title="Lên đầu trang">↑</button>
@@ -1344,6 +1365,21 @@ $('#importFile').onchange = async e => {
   state.draws[state.game] = draws;
   state.source[state.game] = 'file';
   renderAll();
+};
+
+// ---------- terms ----------
+// Open the notice until this browser has acknowledged the terms; never blocks the app.
+if (store.get('vlp:terms')) $('#termsAck').hidden = true;
+else $('#terms').open = true;
+$('#termsOk').onclick = () => {
+  store.set('vlp:terms', new Date().toISOString());
+  $('#termsAck').hidden = true;
+  $('#terms').open = false;
+};
+$('#termsLink').onclick = e => {
+  e.preventDefault();
+  $('#terms').open = true;
+  $('#terms').scrollIntoView({ block: 'start' });
 };
 
 // ---------- section nav ----------

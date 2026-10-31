@@ -32,6 +32,16 @@ App đọc file này từ `LIVE_URL` trong `index.html`
 Nếu vietlott.vn đổi giao diện, script sẽ giữ giá trị cũ cho phần không đọc được (và báo lỗi nếu không đọc được gì),
 còn app tự quay về chế độ nhập tay.
 
+## Điều khoản sử dụng
+
+- Chỉ dùng cá nhân, giải trí, phi thương mại; app không dự đoán kết quả và không phải lời khuyên tài chính.
+- Không dùng để bán "số đẹp"/soi cầu thu phí, không gắn vào cờ bạc trái phép, không tự động gửi yêu cầu
+  làm quá tải nguồn dữ liệu.
+- Chỉ dành cho người từ 18 tuổi trở lên. Chơi có trách nhiệm: chỉ chơi bằng số tiền bạn sẵn sàng mất.
+- Dự án không thuộc và không được Công ty TNHH MTV Xổ số Điện toán Việt Nam (Vietlott) bảo trợ;
+  "Vietlott", "Mega 6/45", "Power 6/55" là tên của Vietlott.
+- Dữ liệu cá nhân (ngày sinh, họ tên) chỉ lưu trên trình duyệt của người dùng.
+
 ## Bản quyền
 
 © 2026 Huỳnh Kim Trí. Bảo lưu mọi quyền. Bạn được xem mã nguồn và dùng app cho mục đích cá nhân,
