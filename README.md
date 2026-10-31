@@ -1,4 +1,4 @@
-# Vietlott Picker
+# Lotto Picker
 
 Web app một file (`index.html`) để phân tích kết quả Vietlott Mega 6/45 và Power 6/55, gợi ý bộ số
 (thống kê, thần số học, ít người chọn), tính giá trị kỳ vọng của vé và kiểm chứng các chiến lược trên dữ liệu thật.
