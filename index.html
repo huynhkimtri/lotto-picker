@@ -1,0 +1,1361 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vietlott Picker</title>
+<style>
+:root {
+  --bg: #f5f4f0; --card: #ffffff; --ink: #1d1d1f; --muted: #6b6b72; --line: #e5e3dd;
+  --accent: #d4372c; --hot: #e0492f; --cold: #2f6fe0; --good: #1f8a4c; --warn: #b7791f;
+  --soft: color-mix(in srgb, var(--accent) 12%, var(--card));
+  --radius: 14px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111114; --card: #1b1b20; --ink: #ececf1; --muted: #9b9ba5; --line: #2c2c34;
+    --hot: #f0634a; --cold: #5b8ff0; --good: #3cb371;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111114; --card: #1b1b20; --ink: #ececf1; --muted: #9b9ba5; --line: #2c2c34;
+  --hot: #f0634a; --cold: #5b8ff0; --good: #3cb371;
+}
+:root[data-game="power655"] { --accent: #e08a00; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+section[id] { scroll-margin-top: 64px; }
+
+.nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px;
+  margin: 0 -16px 16px; padding: 8px 16px; border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); }
+.nav .links { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+.nav .links::-webkit-scrollbar { display: none; }
+.nav a { white-space: nowrap; text-decoration: none; color: var(--muted); font-size: 13px;
+  padding: 6px 12px; border-radius: 99px; border: 1px solid transparent; }
+.nav a:hover { color: var(--ink); border-color: var(--line); }
+.nav a.active { background: var(--accent); color: #fff; font-weight: 600; }
+.nav .tabs { padding: 2px; flex: none; }
+.nav .tabs button { padding: 4px 10px; font-size: 12px; }
+.totop { position: fixed; right: 16px; bottom: 16px; z-index: 10; width: 42px; height: 42px; padding: 0;
+  border-radius: 50%; box-shadow: 0 4px 14px rgb(0 0 0 / .15); font-size: 18px;
+  opacity: 0; pointer-events: none; transition: opacity .2s; }
+.totop.show { opacity: 1; pointer-events: auto; }
+body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.45; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 48px; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+h2 { font-size: 16px; margin: 0 0 12px; }
+small, .muted { color: var(--muted); }
+button, select, input { font: inherit; color: inherit; }
+button {
+  border: 1px solid var(--line); background: var(--card); border-radius: 10px;
+  padding: 8px 14px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+button.primary:hover { filter: brightness(1.07); }
+select, input[type=number] {
+  border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 7px 10px;
+}
+
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-bottom: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.logo { width: 34px; height: 34px; border-radius: 50%; background: var(--accent);
+  display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 14px; }
+.tabs { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.tabs button { border: 0; padding: 6px 14px; border-radius: 8px; background: transparent; }
+.tabs button[aria-pressed="true"] { background: var(--accent); color: #fff; font-weight: 600; }
+.status { font-size: 13px; color: var(--muted); flex: 1 1 260px; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.grid2 > .card { margin: 0; }
+.stack > * + * { margin-top: 16px; }
+@media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
+
+details.note { background: var(--soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+details.note summary { cursor: pointer; font-weight: 600; }
+details.note p { margin: 8px 0 0; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; }
+.controls label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 14px; }
+.checks label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.explain { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+
+.tickets { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-top: 16px; }
+.ticket { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.ticket .tl { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+.balls { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.ball { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; position: relative;
+  font-weight: 700; font-variant-numeric: tabular-nums; color: #fff;
+  background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--accent) 55%, #fff), var(--accent) 70%); }
+.ball.sm { width: 28px; height: 28px; font-size: 12px; }
+.ball.bonus { background: radial-gradient(circle at 32% 28%, #ffd86b, #c99400 70%); }
+.ball .tag { position: absolute; right: -2px; top: -2px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--card); }
+.tag.hot { background: var(--hot); } .tag.cold { background: var(--cold); }
+.tag.luck { right: auto; left: -2px; background: var(--luck); }
+:root { --luck: #d9a400; }
+
+.me { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px; }
+@media (max-width: 820px) { .me { grid-template-columns: 1fr; } }
+.me input[type=date], .me input[type=text] {
+  border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 7px 10px; width: 100%;
+}
+.me label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; min-width: 96px; }
+.chip b { display: block; font-size: 20px; color: var(--luck); }
+.chip span { font-size: 12px; color: var(--muted); }
+.chip.main { border-color: var(--luck); background: color-mix(in srgb, var(--luck) 10%, var(--card)); }
+.me input[type=number] { width: 100%; }
+.me .checks label { flex-direction: row; font-size: 14px; color: var(--ink); margin: 0; }
+
+.pop { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 99px; cursor: help; }
+.pop.lv0 { background: color-mix(in srgb, var(--good) 16%, var(--card)); color: var(--good); }
+.pop.lv1 { background: color-mix(in srgb, var(--good) 9%, var(--card)); color: var(--good); }
+.pop.lv2 { background: color-mix(in srgb, var(--warn) 14%, var(--card)); color: var(--warn); }
+.pop.lv3 { background: color-mix(in srgb, var(--hot) 14%, var(--card)); color: var(--hot); }
+.why { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.gauge { position: relative; height: 14px; border-radius: 7px; background: var(--line); margin: 10px 0 4px; }
+.gauge > i { position: absolute; inset: 0 auto 0 0; border-radius: 7px; background: var(--accent); }
+.gauge > em { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.gauge-l { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.big { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+.meta { font-size: 12px; color: var(--muted); }
+.legend { font-size: 12px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+.numgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 5px; }
+.cell { border-radius: 8px; padding: 5px 2px; text-align: center; border: 1px solid var(--line); cursor: default; }
+.cell b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+.cell small { font-size: 10px; display: block; white-space: nowrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; margin-bottom: 10px; }
+.seg button { border: 0; border-radius: 0; padding: 4px 10px; font-size: 13px; background: transparent; }
+.seg button[aria-pressed="true"] { background: var(--soft); font-weight: 600; }
+
+.recent { list-style: none; padding: 0; margin: 0; }
+.recent li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+.recent li:last-child { border: 0; }
+.recent .d { font-size: 12px; color: var(--muted); width: 92px; }
+.recent .balls { margin: 0; gap: 4px; }
+
+svg text { fill: var(--muted); font-size: 10px; }
+.chart { width: 100%; height: auto; display: block; }
+
+.pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.pair { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.pair .balls { margin: 0; gap: 3px; }
+
+.dist { display: grid; grid-template-columns: 74px 1fr 46px; gap: 4px 8px; align-items: center; font-size: 12px; }
+.bar { height: 12px; border-radius: 4px; background: var(--line); }
+.bar > i { display: block; height: 100%; border-radius: 4px; background: var(--muted); }
+.bar.ok > i { background: var(--accent); }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; }
+.verdict { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--soft); font-size: 14px; }
+.kpis { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.kpi { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; min-width: 130px; }
+.kpi b { display: block; font-size: 20px; }
+.kpi span { font-size: 12px; color: var(--muted); }
+footer { margin-top: 24px; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.err { color: var(--hot); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo">VP</div><h1>Vietlott Picker</h1></div>
+    <div class="tabs" role="group" aria-label="Loại vé">
+      <button data-game="mega645" aria-pressed="true">Mega 6/45</button>
+      <button data-game="power655" aria-pressed="false">Power 6/55</button>
+    </div>
+    <div class="status" id="status">Đang tải dữ liệu…</div>
+  </header>
+
+  <nav class="nav" aria-label="Các mục">
+    <div class="links">
+      <a href="#s-numerology">Thần số học</a>
+      <a href="#s-pick">Gợi ý vé</a>
+      <a href="#s-ev">Có nên chơi?</a>
+      <a href="#s-check">Chấm vé</a>
+      <a href="#s-map">Bản đồ số</a>
+      <a href="#s-recent">Kết quả gần đây</a>
+      <a href="#s-freq">Tần suất</a>
+      <a href="#s-pairs">Cặp số</a>
+      <a href="#s-structure">Cấu trúc</a>
+      <a href="#s-backtest">Kiểm chứng</a>
+    </div>
+    <div class="tabs" role="group" aria-label="Loại vé">
+      <button data-game="mega645" aria-pressed="true">6/45</button>
+      <button data-game="power655" aria-pressed="false">6/55</button>
+    </div>
+  </nav>
+
+  <details class="note">
+    <summary>Lưu ý trước khi dùng</summary>
+    <p>Mỗi kỳ quay Vietlott là độc lập: máy không "nhớ" số nào đã về. Về toán học, mọi bộ 6 số đều có cùng xác suất trúng Jackpot
+      (<b id="odds">1 / 8.145.060</b>). Các phân tích "số nóng", "số gan" bên dưới mô tả <i>quá khứ</i>, không làm tăng xác suất trúng.
+      Phần <b>Kiểm chứng</b> ở cuối trang cho bạn tự kiểm tra điều này trên dữ liệu thật.</p>
+    <p>Điều duy nhất có tác dụng thật là <b>tránh các bộ số nhiều người chọn</b> (ngày sinh ≤ 31, dãy liên tiếp…): xác suất trúng
+      không đổi, nhưng nếu trúng thì ít khả năng phải chia giải với người khác.</p>
+  </details>
+
+  <section class="card" id="s-numerology" style="margin-bottom:16px">
+    <h2>Thần số học của bạn <small id="numDate"></small></h2>
+    <div class="me">
+      <div>
+        <label>Ngày sinh
+          <input type="date" id="birth">
+        </label>
+        <label>Họ tên khai sinh (không bắt buộc, có dấu hay không đều được)
+          <input type="text" id="fullname" placeholder="VD: Nguyễn Văn An" autocomplete="off">
+        </label>
+        <p class="explain" style="margin:0">Chỉ lưu trên trình duyệt của bạn. Theo hệ Pythagoras: Số chủ đạo từ ngày sinh,
+          Ngày cá nhân = Tháng cá nhân + ngày quay. Đây là niềm tin mang tính giải trí — nó không đổi xác suất trúng
+          (bạn có thể tự kiểm chứng ở cuối trang).</p>
+      </div>
+      <div id="numOut"><p class="muted" style="margin:0">Nhập ngày sinh để xem các con số may mắn của bạn trong ngày quay.</p></div>
+    </div>
+  </section>
+
+  <section class="card" id="s-pick">
+    <h2 id="pickTitle">Bộ số gợi ý</h2>
+    <div class="controls">
+      <label>Chiến lược
+        <select id="strategy">
+          <option value="antipop">Ít người chọn nhất (khuyến nghị)</option>
+          <option value="balanced">Cân bằng (3 nóng + 2 gan + 1 ngẫu nhiên)</option>
+          <option value="hot">Số nóng</option>
+          <option value="cold">Số gan (lâu chưa về)</option>
+          <option value="numerology">Thần số học (số may mắn trong ngày)</option>
+          <option value="mixed">Thần số học + thống kê (3 may mắn + 2 nóng + 1 gan)</option>
+          <option value="random">Ngẫu nhiên thuần</option>
+        </select>
+      </label>
+      <label>Cửa sổ phân tích
+        <select id="window">
+          <option value="30">30 kỳ gần nhất</option>
+          <option value="60">60 kỳ gần nhất</option>
+          <option value="100" selected>100 kỳ gần nhất</option>
+          <option value="300">300 kỳ gần nhất</option>
+          <option value="0">Toàn bộ lịch sử</option>
+        </select>
+      </label>
+      <label>Số vé
+        <input type="number" id="count" min="1" max="20" value="5" style="width:80px">
+      </label>
+      <button class="primary" id="gen">Tạo bộ số</button>
+      <button id="copy">Sao chép</button>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="optStruct" checked> Lọc theo cấu trúc phổ biến (tổng, chẵn/lẻ, nhỏ/lớn, dãy liên tiếp)</label>
+      <label><input type="checkbox" id="optBirthday" checked> Tránh vùng ngày sinh (≥ 2 số &gt; 31)</label>
+      <label><input type="checkbox" id="optDaily" checked> Cố định theo kỳ quay (bấm lại vẫn ra cùng bộ số)</label>
+    </div>
+    <p class="explain" id="stratExplain"></p>
+    <div class="tickets" id="tickets"></div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--hot)"></i>số nóng (top 20% tần suất có trọng số thời gian)</span>
+      <span><i class="dot" style="background:var(--cold)"></i>số gan (vắng ≥ 1,5× khoảng cách kỳ vọng)</span>
+      <span><i class="dot" style="background:var(--luck)"></i>số may mắn theo thần số học</span>
+      <span>Độ phổ biến: ước tính bộ số giống thói quen chọn của đám đông đến đâu (càng thấp càng ít phải chia giải)</span>
+    </div>
+  </section>
+
+  <section class="card" id="s-ev" style="margin-top:16px">
+    <h2>Có nên chơi kỳ này? <small id="evSub"></small></h2>
+    <div class="me">
+      <div>
+        <label>Jackpot hiện tại (tỷ đồng)
+          <input type="number" id="jackpot" min="0" step="0.1">
+        </label>
+        <label id="j2wrap">Jackpot 2 hiện tại (tỷ đồng)
+          <input type="number" id="jackpot2" min="0" step="0.1">
+        </label>
+        <label>Số vé bán ra ước tính cho kỳ này (triệu vé)
+          <input type="number" id="sold" min="0" step="0.1">
+        </label>
+        <div class="checks" style="margin-top:0">
+          <label><input type="checkbox" id="tax" checked> Trừ thuế TNCN 10% (phần vượt 10 triệu)</label>
+        </div>
+        <p class="explain" id="liveNote"></p>
+        <p class="explain">Cơ cấu giải dùng ở đây: <span id="prizeNote"></span> — nên đối chiếu lại
+          với thể lệ mới nhất. Số vé bán ra chỉ là ước tính để tính khả năng phải chia Jackpot; bạn tự chỉnh nếu có số liệu.</p>
+      </div>
+      <div id="evOut"></div>
+    </div>
+  </section>
+
+  <section class="card" id="s-check" style="margin-top:16px">
+    <h2>Chấm điểm vé của bạn</h2>
+    <div class="controls">
+      <label style="flex:1 1 260px">6 số bạn định chọn (cách nhau bởi dấu cách hoặc dấu phẩy)
+        <input type="text" id="myTicket" placeholder="VD: 3 14 22 35 40 44" autocomplete="off"
+          style="border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 10px">
+      </label>
+      <button class="primary" id="checkBt">Chấm điểm</button>
+    </div>
+    <div id="checkOut" style="margin-top:12px"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card" id="s-map">
+      <h2>Bản đồ các con số</h2>
+      <div class="seg" role="group">
+        <button data-mode="freq" aria-pressed="true">Theo tần suất</button>
+        <button data-mode="gap" aria-pressed="false">Theo độ gan</button>
+      </div>
+      <div class="numgrid" id="numgrid"></div>
+      <p class="explain" id="gridNote"></p>
+    </section>
+    <section class="card" id="s-recent">
+      <h2>Kết quả gần đây</h2>
+      <ul class="recent" id="recent"></ul>
+    </section>
+  </div>
+
+  <section class="card" id="s-freq" style="margin-top:16px">
+    <h2>Tần suất từng số <small id="freqSub"></small></h2>
+    <div id="freqChart"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card" id="s-pairs">
+      <h2>Cặp số hay về cùng nhau <small id="pairSub"></small></h2>
+      <div class="pairs" id="pairs"></div>
+    </section>
+    <section class="card" id="s-structure">
+      <h2>Cấu trúc các bộ số đã trúng</h2>
+      <div id="sumChart"></div>
+      <div class="stack" id="dists" style="margin-top:12px"></div>
+    </section>
+  </div>
+
+  <section class="card" id="s-backtest" style="margin-top:16px">
+    <h2>Kiểm chứng: chiến lược có thật sự hơn chọn bừa?</h2>
+    <p class="explain" style="margin-top:0">Quay ngược thời gian: với mỗi kỳ trong quá khứ, app chỉ dùng dữ liệu <i>trước</i> kỳ đó để tạo 5 vé theo
+      chiến lược đang chọn, rồi so với kết quả thật. Song song tạo 5 vé ngẫu nhiên để đối chứng.</p>
+    <div class="controls">
+      <label>Số kỳ kiểm tra
+        <select id="horizon">
+          <option value="100">100 kỳ</option>
+          <option value="300" selected>300 kỳ</option>
+          <option value="600">600 kỳ</option>
+        </select>
+      </label>
+      <button class="primary" id="runBt">Chạy kiểm chứng</button>
+      <span class="muted" id="btProgress"></span>
+    </div>
+    <div id="btResult" style="margin-top:14px"></div>
+    <div class="verdict" id="chi"></div>
+  </section>
+
+  <footer>
+    <span>Dữ liệu: <a id="srcLink" href="https://github.com/vietvudanh/vietlott-data" target="_blank" rel="noopener">vietvudanh/vietlott-data</a> (cập nhật hằng ngày).</span>
+    <button id="reload">Tải lại dữ liệu</button>
+    <label>Hoặc nhập file (JSONL / CSV <code>YYYY-MM-DD,n1,…,n6</code>): <input type="file" id="importFile" accept=".jsonl,.json,.csv,.txt"></label>
+  </footer>
+</div>
+<button class="totop" id="totop" aria-label="Lên đầu trang" title="Lên đầu trang">↑</button>
+
+<script>
+const GAMES = {
+  mega645: {
+    name: 'Mega 6/45', max: 45, file: 'power645', days: [3, 5, 0], jackpotMin: 12, sold: 2,
+    prizes: [
+      { key: 6, name: 'Jackpot', cond: '6 số', jackpot: 1 },
+      { key: 5, name: 'Giải Nhất', cond: '5 số', value: 10e6 },
+      { key: 4, name: 'Giải Nhì', cond: '4 số', value: 300e3 },
+      { key: 3, name: 'Giải Ba', cond: '3 số', value: 30e3 },
+    ],
+  },
+  power655: {
+    name: 'Power 6/55', max: 55, file: 'power655', days: [2, 4, 6], jackpotMin: 30, jackpot2Min: 3, sold: 2,
+    prizes: [
+      { key: 6, name: 'Jackpot 1', cond: '6 số', jackpot: 1 },
+      { key: '5b', name: 'Jackpot 2', cond: '5 số + số đặc biệt', jackpot: 2 },
+      { key: 5, name: 'Giải Nhất', cond: '5 số', value: 40e6 },
+      { key: 4, name: 'Giải Nhì', cond: '4 số', value: 500e3 },
+      { key: 3, name: 'Giải Ba', cond: '3 số', value: 50e3 },
+    ],
+  },
+};
+const PRICE = 10000;
+// Jackpots and the latest prize table, written by .github/workflows/update-data.yml.
+// When the page is served over http(s) next to data/vietlott.json it is found automatically;
+// when opened as a local file, put your repo's raw URL here, e.g.
+// 'https://raw.githubusercontent.com/<user>/<repo>/main/data/vietlott.json'
+const LIVE_URL = '';
+const PICK = 6;
+const SRC = f => `https://raw.githubusercontent.com/vietvudanh/vietlott-data/master/data/${f}.jsonl`;
+const WEEKDAYS = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+const STRAT_TEXT = {
+  antipop: 'Chọn ngẫu nhiên thuần (đúng với xác suất thật), rồi trong hàng trăm bộ thử giữ lại bộ ít giống thói quen chọn số của đám đông nhất: tránh ngày sinh, dãy liên tiếp, số cách đều, số trùng kỳ trước, số nóng… Xác suất trúng không đổi, nhưng nếu trúng thì ít khả năng phải chia giải.',
+  balanced: 'Lấy 3 số theo trọng số "nóng" (về nhiều gần đây, kỳ càng mới càng nặng ký), 2 số theo trọng số "gan" (vắng lâu so với kỳ vọng) và 1 số ngẫu nhiên.',
+  hot: 'Ưu tiên các số về nhiều nhất trong cửa sổ phân tích — niềm tin "số đang vào cầu".',
+  cold: 'Ưu tiên các số vắng lâu nhất so với khoảng cách kỳ vọng — niềm tin "số gan sắp về".',
+  numerology: 'Ưu tiên các số có tổng chữ số rút gọn trùng với Ngày cá nhân của bạn trong ngày quay, Số chủ đạo, ngày/tháng sinh và số tên.',
+  mixed: 'Lấy 3 số theo trọng số thần số học, 2 số nóng và 1 số gan.',
+  random: 'Mọi số có xác suất như nhau. Đây chính là mô hình đúng với máy quay số thật.',
+};
+const NEEDS_LUCK = new Set(['numerology', 'mixed']);
+const DAY_MEANING = {
+  1: 'khởi đầu, chủ động', 2: 'hợp tác, kiên nhẫn', 3: 'sáng tạo, vui vẻ', 4: 'ổn định, kỷ luật',
+  5: 'thay đổi, phiêu lưu', 6: 'gia đình, trách nhiệm', 7: 'nội tâm, trực giác', 8: 'tài chính, thành quả',
+  9: 'hoàn tất, cho đi', 11: 'trực giác mạnh', 22: 'kiến tạo lớn', 33: 'yêu thương, chữa lành',
+};
+
+const state = { game: 'mega645', draws: {}, source: {}, tickets: {}, gridMode: 'freq' };
+const $ = s => document.querySelector(s);
+const nf = new Intl.NumberFormat('vi-VN');
+const pad = n => String(n).padStart(2, '0');
+const fmtDate = iso => iso.split('-').reverse().join('/');
+const sum = a => a.reduce((s, x) => s + x, 0);
+
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+// ---------- random ----------
+function mulberry32(a) {
+  return () => {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+const freshSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
+
+function comb(n, k) {
+  let r = 1;
+  for (let i = 1; i <= k; i++) r = r * (n - k + i) / i;
+  return r;
+}
+
+// ---------- data ----------
+function parseData(text, max) {
+  const out = [], seen = new Set();
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    let date, id, nums;
+    if (line.startsWith('{')) {
+      try {
+        const o = JSON.parse(line);
+        date = o.date; id = o.id; nums = o.result;
+      } catch { continue; }
+    } else {
+      const m = line.match(/(\d{4})-(\d{2})-(\d{2})|(\d{2})\/(\d{2})\/(\d{4})/);
+      if (!m) continue;
+      date = m[1] ? `${m[1]}-${m[2]}-${m[3]}` : `${m[6]}-${m[5]}-${m[4]}`;
+      nums = (line.replace(m[0], '').match(/\d+/g) || []).map(Number);
+    }
+    if (!date || !Array.isArray(nums) || nums.length < PICK) continue;
+    const main = nums.slice(0, PICK).map(Number);
+    if (main.some(x => !(x >= 1 && x <= max)) || new Set(main).size !== PICK) continue;
+    const key = id || date + main.join();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ date, id: id || '', nums: main.sort((a, b) => a - b), bonus: nums[PICK] ?? null });
+  }
+  out.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+  return out;
+}
+
+async function loadGame(game, force = false) {
+  const g = GAMES[game];
+  if (state.draws[game] && !force) return;
+  $('#status').textContent = 'Đang tải dữ liệu…';
+  const cacheKey = 'vlp:' + g.file;
+  try {
+    const res = await fetch(SRC(g.file), { cache: 'no-cache' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const draws = parseData(text, g.max);
+    if (draws.length < 50) throw new Error('dữ liệu quá ít');
+    state.draws[game] = draws;
+    state.source[game] = 'online';
+    store.set(cacheKey, { t: Date.now(), text });
+  } catch (e) {
+    const cached = store.get(cacheKey);
+    if (cached) {
+      state.draws[game] = parseData(cached.text, g.max);
+      state.source[game] = 'cache:' + new Date(cached.t).toLocaleString('vi-VN');
+    } else {
+      state.draws[game] = [];
+      state.source[game] = 'error:' + e.message;
+    }
+  }
+}
+
+async function loadLive() {
+  const urls = [];
+  if (location.protocol.startsWith('http')) urls.push('data/vietlott.json');
+  if (LIVE_URL) urls.push(LIVE_URL);
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: 'no-cache' });
+      if (!res.ok) continue;
+      const live = await res.json();
+      if (!live.mega645 && !live.power655) continue;
+      state.live = live;
+      store.set('vlp:live', live);
+      return;
+    } catch {}
+  }
+  state.live = store.get('vlp:live');
+}
+
+// ---------- analysis ----------
+function computeStats(draws, max, win) {
+  const W = win > 0 ? draws.slice(-win) : draws;
+  const n = W.length;
+  const freq = new Array(max + 1).fill(0), decay = new Array(max + 1).fill(0);
+  const halfLife = Math.max(5, n / 3);
+  W.forEach((d, i) => {
+    const w = Math.pow(0.5, (n - 1 - i) / halfLife);
+    for (const x of d.nums) { freq[x]++; decay[x] += w; }
+  });
+  // gap = number of draws since the number last appeared (over the full history)
+  const gap = new Array(max + 1).fill(-1);
+  let left = max;
+  for (let i = draws.length - 1; i >= 0 && left; i--) {
+    for (const x of draws[i].nums) if (gap[x] < 0) { gap[x] = draws.length - 1 - i; left--; }
+  }
+  for (let x = 1; x <= max; x++) if (gap[x] < 0) gap[x] = draws.length;
+  const p = PICK / max, expGap = (1 - p) / p;
+  const meanDecay = sum(decay) / max || 1;
+  const hot = decay.map(v => v / meanDecay);
+  const gapRatio = gap.map(v => v / expGap);
+  const order = Array.from({ length: max }, (_, i) => i + 1).sort((a, b) => decay[b] - decay[a]);
+  const hotRank = new Array(max + 1);
+  order.forEach((x, i) => hotRank[x] = i);
+  const hotW = [0], coldW = [0], uniW = [0];
+  for (let x = 1; x <= max; x++) {
+    hotW[x] = hot[x] ** 2 + 0.02;
+    coldW[x] = Math.min(gapRatio[x], 4) ** 1.5 + 0.02;
+    uniW[x] = 1;
+  }
+  const last = draws.length ? draws[draws.length - 1].nums : [];
+  return { n, max, freq, decay, hot, gap, gapRatio, expGap, hotRank, last, expected: n * PICK / max, hotW, coldW, uniW };
+}
+
+// How much a ticket looks like what the crowd tends to pick (0 = unusual, 100 = very common).
+const PRETTY = new Set([6, 7, 8, 9, 18, 28, 38, 39]);
+function popularity(nums, S) {
+  let score = 0;
+  const reasons = [];
+  const add = (pts, why) => { if (pts > 0) { score += pts; reasons.push(why); } };
+  const maxBy = key => {
+    const c = {};
+    for (const x of nums) c[key(x)] = (c[key(x)] || 0) + 1;
+    return Object.entries(c).reduce((a, b) => b[1] > a[1] ? b : a, ['', 0]);
+  };
+  const le31 = nums.filter(x => x <= 31).length, le12 = nums.filter(x => x <= 12).length;
+  add((le31 - 3) * 10, `${le31}/6 số trong vùng ngày sinh 1–31`);
+  add((le12 - 2) * 5, `${le12} số trong vùng tháng 1–12`);
+  const run = longestRun(nums);
+  add((run - 2) * 12, `dãy ${run} số liên tiếp`);
+  let streak = 1, best = 1, step = 0;
+  for (let i = 2; i < nums.length; i++) {
+    const d = nums[i] - nums[i - 1];
+    streak = d === nums[i - 1] - nums[i - 2] && d > 1 ? streak + 1 : 1;
+    if (streak > best) { best = streak; step = d; }
+  }
+  add((best - 2) * 12, `${best + 1} số cách đều nhau ${step}`);
+  const [tail, nTail] = maxBy(x => x % 10);
+  add((nTail - 2) * 8, `${nTail} số cùng đuôi ${tail}`);
+  const [dec, nDec] = maxBy(x => Math.floor(x / 10));
+  add((nDec - 3) * 8, `${nDec} số cùng đầu ${dec}x`);
+  const m5 = nums.filter(x => x % 5 === 0).length;
+  add(m5 >= 4 ? 8 : 0, `${m5} số chia hết cho 5`);
+  const pretty = nums.filter(x => PRETTY.has(x)).length;
+  add((pretty - 1) * 4, `${pretty} số "đẹp" (6, 7, 8, 9, 39…)`);
+  const lastHit = nums.filter(x => S.last.includes(x)).length;
+  add((lastHit - 1) * 10, `${lastHit} số trùng kỳ vừa quay`);
+  const hotHit = nums.filter(x => S.hotRank[x] < 10).length;
+  add((hotHit - 2) * 6, `${hotHit} số nằm trong top 10 số nóng`);
+  score = Math.min(100, score);
+  const level = score < 10 ? 0 : score < 25 ? 1 : score < 45 ? 2 : 3;
+  const label = ['Rất ít người chọn', 'Ít người chọn', 'Khá phổ biến', 'Rất phổ biến'][level];
+  return { score, level, label, reasons };
+}
+
+function popBadge(p) {
+  const title = (p.reasons.join('; ') || 'Không có dấu hiệu phổ biến').replace(/"/g, '&quot;');
+  return `<span class="pop lv${p.level}" title="${title}">Độ phổ biến ${p.score} · ${p.label}</span>`;
+}
+
+function longestRun(nums) {
+  let best = 1, cur = 1;
+  for (let i = 1; i < nums.length; i++) {
+    cur = nums[i] === nums[i - 1] + 1 ? cur + 1 : 1;
+    best = Math.max(best, cur);
+  }
+  return best;
+}
+
+function structure(draws, max) {
+  const n = draws.length, half = Math.floor(max / 2);
+  const sums = draws.map(d => sum(d.nums)).sort((a, b) => a - b);
+  const q = p => sums[Math.floor(p * (n - 1))];
+  const oddC = new Array(PICK + 1).fill(0), lowC = new Array(PICK + 1).fill(0), runC = new Array(PICK + 1).fill(0);
+  for (const d of draws) {
+    oddC[d.nums.filter(x => x % 2).length]++;
+    lowC[d.nums.filter(x => x <= half).length]++;
+    runC[longestRun(d.nums)]++;
+  }
+  const common = c => new Set(c.map((v, k) => v / n >= 0.10 ? k : -1).filter(k => k >= 0));
+  let acc = 0, maxRun = PICK;
+  for (let r = 1; r <= PICK; r++) { acc += runC[r]; if (acc / n >= 0.9) { maxRun = r; break; } }
+  return { n, half, sums, sumLo: q(0.1), sumHi: q(0.9), oddC, lowC, runC, odd: common(oddC), low: common(lowC), maxRun };
+}
+
+function passes(nums, R, opts) {
+  if (opts.structure) {
+    const s = sum(nums);
+    if (s < R.sumLo || s > R.sumHi) return false;
+    if (!R.odd.has(nums.filter(x => x % 2).length)) return false;
+    if (!R.low.has(nums.filter(x => x <= R.half).length)) return false;
+    if (longestRun(nums) > R.maxRun) return false;
+  }
+  if (opts.birthday && nums.filter(x => x > 31).length < 2) return false;
+  return true;
+}
+
+function sampleW(w, k, taken, rng) {
+  for (let j = 0; j < k; j++) {
+    let tot = 0;
+    for (let x = 1; x < w.length; x++) if (!taken.has(x)) tot += w[x];
+    let r = rng() * tot, pick = -1;
+    for (let x = 1; x < w.length; x++) {
+      if (taken.has(x)) continue;
+      r -= w[x];
+      if (r <= 0) { pick = x; break; }
+    }
+    if (pick < 0) for (let x = w.length - 1; x >= 1; x--) if (!taken.has(x)) { pick = x; break; }
+    taken.add(pick);
+  }
+  return taken;
+}
+
+function generate(strategy, S, R, opts, rng, luck) {
+  if (strategy === 'antipop') {
+    let best = null;
+    for (let tries = 0, found = 0; tries < 4000 && found < 300; tries++) {
+      const nums = [...sampleW(S.uniW, PICK, new Set(), rng)].sort((a, b) => a - b);
+      if (!passes(nums, R, opts)) continue;
+      found++;
+      const score = popularity(nums, S).score;
+      if (!best || score < best.score) best = { nums, score, ok: true };
+      if (score === 0) break;
+    }
+    return best || { nums: [...sampleW(S.uniW, PICK, new Set(), rng)].sort((a, b) => a - b), ok: false };
+  }
+  let nums = [];
+  for (let tries = 0; tries < 4000; tries++) {
+    const taken = new Set();
+    if (strategy === 'balanced') {
+      sampleW(S.hotW, 3, taken, rng);
+      sampleW(S.coldW, 2, taken, rng);
+      sampleW(S.uniW, 1, taken, rng);
+    } else if (strategy === 'numerology') {
+      sampleW(luck.w, PICK, taken, rng);
+    } else if (strategy === 'mixed') {
+      sampleW(luck.w, 3, taken, rng);
+      sampleW(S.hotW, 2, taken, rng);
+      sampleW(S.coldW, 1, taken, rng);
+    } else {
+      sampleW(strategy === 'hot' ? S.hotW : strategy === 'cold' ? S.coldW : S.uniW, PICK, taken, rng);
+    }
+    nums = [...taken].sort((a, b) => a - b);
+    if (passes(nums, R, opts)) return { nums, ok: true };
+  }
+  return { nums, ok: false };
+}
+
+function historyMatch(nums, draws) {
+  const set = new Set(nums);
+  let best = 0, bestDate = '', three = 0;
+  for (const d of draws) {
+    const m = d.nums.reduce((c, x) => c + set.has(x), 0);
+    if (m >= 3) three++;
+    if (m > best) { best = m; bestDate = d.date; }
+  }
+  return { best, bestDate, three };
+}
+
+function nextDraw(days) {
+  const now = new Date();
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    if (days.includes(d.getDay()) && (i > 0 || now.getHours() < 18)) {
+      const iso = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      return { iso, label: `${WEEKDAYS[d.getDay()]} ${fmtDate(iso)}`, today: i === 0 };
+    }
+  }
+}
+
+function normCdf(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
+}
+
+// ---------- numerology (Pythagorean) ----------
+const MASTER = [11, 22, 33];
+const digitSum = n => String(n).split('').reduce((s, c) => s + +c, 0);
+function reduceNum(n, keepMaster = false) {
+  while (n > 9 && !(keepMaster && MASTER.includes(n))) n = digitSum(n);
+  return n;
+}
+
+function nameNumbers(name) {
+  const letters = name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd')
+    .toLowerCase().replace(/[^a-z]/g, '');
+  if (!letters) return null;
+  const val = c => (c.charCodeAt(0) - 97) % 9 + 1;
+  const all = [...letters].reduce((s, c) => s + val(c), 0);
+  const vowels = [...letters].filter(c => 'aeiou'.includes(c)).reduce((s, c) => s + val(c), 0);
+  return { expression: reduceNum(all, true), soul: vowels ? reduceNum(vowels, true) : null };
+}
+
+// Numerology profile of the buyer for a given draw date, with a weight per number.
+function numerology(birthISO, name, dateISO, max) {
+  if (!birthISO) return null;
+  const [by, bm, bd] = birthISO.split('-').map(Number);
+  const [y, m, d] = dateISO.split('-').map(Number);
+  if (!by || !bm || !bd) return null;
+  const lifePath = reduceNum(reduceNum(bd, true) + reduceNum(bm, true) + reduceNum(digitSum(by), true), true);
+  const pYear = reduceNum(reduceNum(bd) + reduceNum(bm) + reduceNum(y));
+  const pMonth = reduceNum(pYear + m);
+  const pDay = reduceNum(pMonth + d);
+  const nm = name ? nameNumbers(name) : null;
+  const core = new Set([pDay, lifePath, bd, bm, nm?.expression, nm?.soul].filter(x => x && x <= max));
+  const w = [0], lucky = new Set(core);
+  for (let x = 1; x <= max; x++) {
+    const r = reduceNum(x);
+    let v = 0.4;
+    if (r === pDay) { v += 2.5; lucky.add(x); }
+    if (r === reduceNum(lifePath)) v += 1.5;
+    if (nm && r === reduceNum(nm.expression)) v += 1;
+    if (core.has(x)) v += 3;
+    w[x] = v;
+  }
+  return { lifePath, pYear, pMonth, pDay, birthDay: bd, birthMonth: bm, ...nm, core, lucky, w };
+}
+
+// ---------- UI ----------
+const ctx = () => {
+  const g = GAMES[state.game];
+  const draws = state.draws[state.game] || [];
+  const win = +$('#window').value;
+  return { g, draws, win };
+};
+const opts = () => ({ structure: $('#optStruct').checked, birthday: $('#optBirthday').checked });
+const me = () => ({ birth: $('#birth').value, name: $('#fullname').value.trim() });
+const luckFor = dateISO => numerology(me().birth, me().name, dateISO, GAMES[state.game].max);
+
+function ballHtml(x, S, luck) {
+  let tag = '';
+  if (S) {
+    if (S.hotRank[x] < S.max * 0.2) tag = '<i class="tag hot"></i>';
+    else if (S.gapRatio[x] >= 1.5) tag = '<i class="tag cold"></i>';
+  }
+  if (luck && luck.lucky.has(x)) tag += '<i class="tag luck"></i>';
+  const title = S ? ` title="Số ${pad(x)}: về ${S.freq[x]} lần/${S.n} kỳ · vắng ${S.gap[x]} kỳ"` : '';
+  return `<span class="ball"${title}>${pad(x)}${tag}</span>`;
+}
+
+function renderNumerology() {
+  const { g } = ctx();
+  const nd = nextDraw(g.days);
+  $('#numDate').textContent = `· cho kỳ quay ${nd.label}`;
+  const L = luckFor(nd.iso);
+  if (!L) {
+    $('#numOut').innerHTML = '<p class="muted" style="margin:0">Nhập ngày sinh để xem các con số may mắn của bạn trong ngày quay.</p>';
+    return;
+  }
+  const chip = (v, label, cls = '') => `<div class="chip ${cls}"><b>${v}</b><span>${label}</span></div>`;
+  const lucky = [...L.lucky].sort((a, b) => L.w[b] - L.w[a] || a - b);
+  $('#numOut').innerHTML = `
+    <div class="chips">
+      ${chip(L.pDay, 'Ngày cá nhân', 'main')}
+      ${chip(L.lifePath, 'Số chủ đạo')}
+      ${chip(L.pYear, 'Năm cá nhân')}
+      ${chip(L.pMonth, 'Tháng cá nhân')}
+      ${L.expression ? chip(L.expression, 'Số biểu đạt (tên)') : ''}
+      ${L.soul ? chip(L.soul, 'Số linh hồn (nguyên âm)') : ''}
+    </div>
+    <p class="explain">Năng lượng ngày ${L.pDay}: <b>${DAY_MEANING[L.pDay]}</b>.
+      Số may mắn = các số rút gọn về ${L.pDay}, cộng với Số chủ đạo, ngày/tháng sinh${L.expression ? ' và số tên' : ''}.</p>
+    <div class="balls">${lucky.map(x => `<span class="ball sm" title="Trọng số ${L.w[x].toFixed(1)}">${pad(x)}</span>`).join('')}</div>`;
+}
+
+function renderStatus() {
+  const { g, draws } = ctx();
+  const src = state.source[state.game] || '';
+  const nd = nextDraw(g.days);
+  $('#pickTitle').textContent = `Bộ số gợi ý cho kỳ quay ${nd.label}${nd.today ? ' (hôm nay, 18:00)' : ''}`;
+  $('#odds').textContent = '1 / ' + nf.format(comb(g.max, PICK));
+  if (!draws.length) {
+    $('#status').innerHTML = `<span class="err">Không tải được dữ liệu (${src.replace('error:', '')}). Hãy thử "Tải lại" hoặc nhập file ở cuối trang.</span>`;
+    return;
+  }
+  const last = draws[draws.length - 1];
+  let note = '';
+  if (src.startsWith('cache:')) note = ` · <span class="err">offline, dùng bản lưu ${src.slice(6)}</span>`;
+  if (src === 'file') note = ' · nguồn: file bạn nhập';
+  $('#status').innerHTML = `${nf.format(draws.length)} kỳ · ${fmtDate(draws[0].date)} → ${fmtDate(last.date)} · kỳ mới nhất #${last.id || '—'}${note}`;
+}
+
+function renderTickets(S, luck) {
+  const { draws } = ctx();
+  const list = state.tickets[state.game] || [];
+  const half = Math.floor(GAMES[state.game].max / 2);
+  $('#tickets').innerHTML = list.map((t, i) => {
+    const odd = t.nums.filter(x => x % 2).length, low = t.nums.filter(x => x <= half).length;
+    const h = historyMatch(t.nums, draws);
+    const nLucky = luck ? t.nums.filter(x => luck.lucky.has(x)).length : 0;
+    const p = popularity(t.nums, S);
+    return `<div class="ticket">
+      <div class="tl"><span>Vé ${i + 1}${t.ok ? '' : ' · <span class="err">không thỏa hết bộ lọc</span>'}</span>${popBadge(p)}</div>
+      <div class="balls">${t.nums.map(x => ballHtml(x, S, luck)).join('')}</div>
+      <div class="meta">Tổng ${sum(t.nums)} · ${odd} lẻ/${PICK - odd} chẵn · ${low} nhỏ/${PICK - low} lớn${luck ? ` · ${nLucky} số may mắn` : ''}</div>
+      <div class="meta">Lịch sử: khớp tối đa ${h.best} số${h.best ? ` (${fmtDate(h.bestDate)})` : ''} · ${h.three} lần khớp ≥ 3 số</div>
+      ${p.reasons.length ? `<div class="why">Dễ trùng người khác vì: ${p.reasons.join(', ')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function generateTickets() {
+  const { g, draws, win } = ctx();
+  if (!draws.length) return;
+  const S = computeStats(draws, g.max, win), R = structure(draws, g.max), o = opts();
+  const strategy = $('#strategy').value;
+  const count = Math.max(1, Math.min(20, +$('#count').value || 5));
+  const nd = nextDraw(g.days);
+  const luck = luckFor(nd.iso);
+  if (NEEDS_LUCK.has(strategy) && !luck) {
+    state.tickets[state.game] = [];
+    $('#tickets').innerHTML = '<p class="muted">Chiến lược này cần ngày sinh — hãy nhập ở mục "Thần số học của bạn" phía trên.</p>';
+    renderSumChart(R);
+    return;
+  }
+  const seed = $('#optDaily').checked
+    ? hashStr([state.game, nd.iso, strategy, win, o.structure, o.birthday, me().birth, me().name].join('|'))
+    : freshSeed();
+  const rng = mulberry32(seed);
+  const list = [], keys = new Set();
+  for (let i = 0; i < count * 20 && list.length < count; i++) {
+    const t = generate(strategy, S, R, o, rng, luck);
+    const k = t.nums.join();
+    if (!keys.has(k)) { keys.add(k); list.push(t); }
+  }
+  state.tickets[state.game] = list;
+  renderTickets(S, luck);
+  renderSumChart(R);
+}
+
+function renderGrid(S) {
+  const max = S.max, mode = state.gridMode;
+  const maxF = Math.max(...S.freq.slice(1)), minF = Math.min(...S.freq.slice(1));
+  const maxG = Math.max(...S.gapRatio.slice(1));
+  let html = '';
+  for (let x = 1; x <= max; x++) {
+    let pct, color, sub;
+    if (mode === 'freq') {
+      pct = maxF > minF ? (S.freq[x] - minF) / (maxF - minF) : 0;
+      color = 'var(--hot)'; sub = `${S.freq[x]} lần`;
+    } else {
+      pct = Math.min(1, S.gapRatio[x] / Math.max(2, maxG));
+      color = 'var(--cold)'; sub = `vắng ${S.gap[x]}`;
+    }
+    const bg = `color-mix(in srgb, ${color} ${Math.round(pct * 75)}%, var(--card))`;
+    const fg = pct > 0.55 ? '#fff' : 'var(--ink)';
+    html += `<div class="cell" style="background:${bg};color:${fg}" title="Số ${pad(x)}: về ${S.freq[x]} lần/${S.n} kỳ (kỳ vọng ${S.expected.toFixed(1)}) · vắng ${S.gap[x]} kỳ (kỳ vọng ~${S.expGap.toFixed(1)})">
+      <b>${pad(x)}</b><small style="color:inherit;opacity:.8">${sub}</small></div>`;
+  }
+  $('#numgrid').innerHTML = html;
+  $('#gridNote').textContent = mode === 'freq'
+    ? `Số lần xuất hiện trong ${S.n} kỳ. Trung bình mỗi số nên về ~${S.expected.toFixed(1)} lần.`
+    : `Số kỳ liên tiếp chưa về. Trung bình một số vắng ~${S.expGap.toFixed(1)} kỳ giữa hai lần xuất hiện.`;
+}
+
+function renderRecent() {
+  const { draws } = ctx();
+  $('#recent').innerHTML = draws.slice(-10).reverse().map(d => `<li>
+    <span class="d">${fmtDate(d.date)}<br>#${d.id}</span>
+    <span class="balls">${d.nums.map(x => `<span class="ball sm">${pad(x)}</span>`).join('')}${
+      d.bonus && state.game === 'power655' ? `<span class="ball sm bonus" title="Số đặc biệt (Jackpot 2)">${pad(d.bonus)}</span>` : ''}</span>
+  </li>`).join('');
+}
+
+function renderFreqChart(S) {
+  const max = S.max, bw = 16, H = 170, top = 10, bottom = 22, left = 26;
+  const W = left + max * bw + 6;
+  const maxF = Math.max(...S.freq.slice(1), S.expected) * 1.08;
+  const y = v => top + (H - top - bottom) * (1 - v / maxF);
+  let bars = '';
+  for (let x = 1; x <= max; x++) {
+    const hot = S.hotRank[x] < max * 0.2, cold = S.gapRatio[x] >= 1.5;
+    const fill = hot ? 'var(--hot)' : cold ? 'var(--cold)' : 'color-mix(in srgb, var(--muted) 45%, var(--card))';
+    const bx = left + (x - 1) * bw + 2;
+    bars += `<rect x="${bx}" y="${y(S.freq[x])}" width="${bw - 4}" height="${y(0) - y(S.freq[x])}" rx="2" fill="${fill}">
+      <title>Số ${pad(x)}: ${S.freq[x]} lần</title></rect>`;
+    if (x === 1 || x % 5 === 0) bars += `<text x="${bx + (bw - 4) / 2}" y="${H - 8}" text-anchor="middle">${x}</text>`;
+  }
+  const ticks = [0, Math.round(maxF / 2), Math.floor(maxF)];
+  const axis = ticks.map(t => `<text x="${left - 6}" y="${y(t) + 3}" text-anchor="end">${t}</text>`).join('');
+  const ey = y(S.expected);
+  $('#freqChart').innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Biểu đồ tần suất">
+    ${axis}${bars}
+    <line x1="${left}" x2="${W - 4}" y1="${ey}" y2="${ey}" stroke="var(--ink)" stroke-dasharray="4 3" opacity=".55"/>
+    <text x="${W - 6}" y="${ey - 4}" text-anchor="end">kỳ vọng ${S.expected.toFixed(1)}</text>
+  </svg>`;
+  $('#freqSub').textContent = `· ${S.n} kỳ gần nhất`;
+}
+
+function renderPairs(win) {
+  const { g, draws } = ctx();
+  const W = win > 0 ? draws.slice(-win) : draws;
+  const counts = new Map();
+  for (const d of W) {
+    const a = d.nums;
+    for (let i = 0; i < a.length; i++) for (let j = i + 1; j < a.length; j++) {
+      const k = a[i] * 100 + a[j];
+      counts.set(k, (counts.get(k) || 0) + 1);
+    }
+  }
+  const expected = W.length * comb(PICK, 2) / comb(g.max, 2);
+  const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+  $('#pairSub').textContent = `· kỳ vọng ~${expected.toFixed(1)} lần/cặp`;
+  $('#pairs').innerHTML = top.map(([k, c]) => `<div class="pair">
+    <span class="balls"><span class="ball sm">${pad(Math.floor(k / 100))}</span><span class="ball sm">${pad(k % 100)}</span></span>
+    <span><b>${c}</b> lần <small>(×${(c / expected).toFixed(1)})</small></span></div>`).join('');
+}
+
+function renderSumChart(R) {
+  const bin = 10, lo = Math.floor(R.sums[0] / bin) * bin, hi = Math.ceil((R.sums[R.n - 1] + 1) / bin) * bin;
+  const nb = (hi - lo) / bin, counts = new Array(nb).fill(0);
+  for (const s of R.sums) counts[Math.min(nb - 1, Math.floor((s - lo) / bin))]++;
+  const W = 420, H = 150, left = 8, bottom = 22, top = 14, bw = (W - left * 2) / nb;
+  const maxC = Math.max(...counts);
+  const xOf = s => left + (s - lo) / bin * bw;
+  const yOf = c => top + (H - top - bottom) * (1 - c / maxC);
+  let svg = `<rect x="${xOf(R.sumLo)}" y="${top - 6}" width="${xOf(R.sumHi) - xOf(R.sumLo)}" height="${H - bottom - top + 6}" fill="var(--accent)" opacity=".08"/>`;
+  counts.forEach((c, i) => {
+    svg += `<rect x="${left + i * bw + 1}" y="${yOf(c)}" width="${bw - 2}" height="${yOf(0) - yOf(c)}" rx="2"
+      fill="color-mix(in srgb, var(--muted) 45%, var(--card))"><title>Tổng ${lo + i * bin}–${lo + i * bin + bin - 1}: ${c} kỳ</title></rect>`;
+    if (i % 2 === 0) svg += `<text x="${left + i * bw}" y="${H - 8}">${lo + i * bin}</text>`;
+  });
+  for (const t of state.tickets[state.game] || []) {
+    const x = xOf(sum(t.nums));
+    svg += `<path d="M${x - 4} ${top - 8} L${x + 4} ${top - 8} L${x} ${top - 1} Z" fill="var(--accent)"><title>Vé có tổng ${sum(t.nums)}</title></path>`;
+  }
+  $('#sumChart').innerHTML = `<div class="meta" style="margin-bottom:4px">Phân bố tổng 6 số (vùng tô: 80% kỳ ở giữa, ${R.sumLo}–${R.sumHi}; ▼ = vé gợi ý)</div>
+    <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Phân bố tổng">${svg}</svg>`;
+}
+
+function renderDists(R) {
+  const block = (title, counts, okSet, label) => {
+    const max = Math.max(...counts);
+    return `<div><div class="meta" style="margin-bottom:4px">${title}</div><div class="dist">${counts.map((c, k) =>
+      `<span>${label(k)}</span><span class="bar ${okSet && okSet.has(k) ? 'ok' : ''}"><i style="width:${(c / max * 100).toFixed(1)}%"></i></span><span>${(c / R.n * 100).toFixed(1)}%</span>`
+    ).join('')}</div></div>`;
+  };
+  const runOk = new Set(Array.from({ length: R.maxRun }, (_, i) => i + 1));
+  $('#dists').innerHTML =
+    block('Số lượng số lẻ (tô màu = mức được bộ lọc chấp nhận)', R.oddC, R.odd, k => `${k} lẻ`) +
+    block(`Số lượng số nhỏ (≤ ${R.half})`, R.lowC, R.low, k => `${k} nhỏ`) +
+    block('Dãy số liên tiếp dài nhất', R.runC.slice(1), new Set([...runOk].map(k => k - 1)), k => k === 0 ? 'không có' : `${k + 1} số`);
+}
+
+function renderChi() {
+  const { g, draws } = ctx();
+  const counts = new Array(g.max + 1).fill(0);
+  for (const d of draws) for (const x of d.nums) counts[x]++;
+  const e = draws.length * PICK / g.max;
+  let chi2 = 0;
+  for (let x = 1; x <= g.max; x++) chi2 += (counts[x] - e) ** 2 / e;
+  const df = g.max - 1;
+  const z = (Math.cbrt(chi2 / df) - (1 - 2 / (9 * df))) / Math.sqrt(2 / (9 * df));
+  const p = 1 - normCdf(z);
+  const lo = Math.min(...counts.slice(1)), hi = Math.max(...counts.slice(1));
+  $('#chi').innerHTML = `<b>Kiểm định độ đều (χ²) trên toàn bộ ${nf.format(draws.length)} kỳ:</b> số về ít nhất ${lo} lần, nhiều nhất ${hi} lần
+    (kỳ vọng ${e.toFixed(0)}). χ² = ${chi2.toFixed(1)}, p ≈ ${p.toFixed(2)}.
+    ${p > 0.05
+      ? 'Chênh lệch này <b>hoàn toàn nằm trong mức dao động ngẫu nhiên bình thường</b> — không có bằng chứng số nào được "ưu ái".'
+      : 'Chênh lệch lớn hơn mức thường gặp của ngẫu nhiên (p < 0,05), nhưng điều này vẫn có thể xảy ra tình cờ và không đảm bảo lặp lại.'}`;
+}
+
+async function runBacktest() {
+  const { g, draws, win } = ctx();
+  const H = Math.min(+$('#horizon').value, draws.length - 60);
+  if (H < 10) return;
+  const strategy = $('#strategy').value, o = opts(), T = 5;
+  if (NEEDS_LUCK.has(strategy) && !me().birth) {
+    $('#btResult').innerHTML = '<p class="err">Hãy nhập ngày sinh để kiểm chứng chiến lược thần số học.</p>';
+    return;
+  }
+  const rngS = mulberry32(12345), rngR = mulberry32(67890);
+  const cS = new Array(PICK + 1).fill(0), cR = new Array(PICK + 1).fill(0);
+  const uni = [0, ...new Array(g.max).fill(1)];
+  $('#runBt').disabled = true;
+  for (let t = draws.length - H, step = 0; t < draws.length; t++, step++) {
+    const past = draws.slice(0, t);
+    const S = computeStats(past, g.max, win), R = structure(past, g.max);
+    const target = new Set(draws[t].nums);
+    const luck = NEEDS_LUCK.has(strategy) ? luckFor(draws[t].date) : null;
+    for (let k = 0; k < T; k++) {
+      const a = generate(strategy, S, R, o, rngS, luck).nums;
+      cS[a.reduce((c, x) => c + target.has(x), 0)]++;
+      const b = sampleW(uni, PICK, new Set(), rngR);
+      cR[[...b].reduce((c, x) => c + target.has(x), 0)]++;
+    }
+    if (step % 15 === 0) {
+      $('#btProgress').textContent = `Đang chạy… ${Math.round(step / H * 100)}%`;
+      await new Promise(r => setTimeout(r));
+    }
+  }
+  $('#runBt').disabled = false;
+  $('#btProgress').textContent = '';
+
+  const N = H * T, total = comb(g.max, PICK);
+  const theo = k => comb(PICK, k) * comb(g.max - PICK, PICK - k) / total;
+  const mean = c => c.reduce((s, v, k) => s + v * k, 0) / N;
+  const mS = mean(cS), mR = mean(cR), mT = PICK * PICK / g.max;
+  const pp = PICK / g.max;
+  const varM = PICK * pp * (1 - pp) * (g.max - PICK) / (g.max - 1);
+  const z = (mS - mR) / Math.sqrt(2 * varM / N);
+  const pct = (c, k) => (c[k] / N * 100).toFixed(2) + '%';
+  const rows = Array.from({ length: PICK + 1 }, (_, k) => `<tr><td>${k} số</td><td>${nf.format(cS[k])} (${pct(cS, k)})</td>
+    <td>${nf.format(cR[k])} (${pct(cR, k)})</td><td>${(theo(k) * 100).toFixed(k >= 5 ? 5 : 2)}%</td></tr>`).join('');
+  const hit3 = c => c[3] + c[4] + c[5] + c[6];
+  const label = $('#strategy').selectedOptions[0].textContent;
+  $('#btResult').innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><b>${mS.toFixed(3)}</b><span>số khớp TB / vé — ${label}</span></div>
+      <div class="kpi"><b>${mR.toFixed(3)}</b><span>số khớp TB / vé — ngẫu nhiên</span></div>
+      <div class="kpi"><b>${mT.toFixed(3)}</b><span>lý thuyết (6×6/${g.max})</span></div>
+      <div class="kpi"><b>${hit3(cS)} / ${hit3(cR)}</b><span>vé khớp ≥ 3 số (chiến lược / ngẫu nhiên)</span></div>
+    </div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Khớp</th><th>Chiến lược</th><th>Ngẫu nhiên</th><th>Lý thuyết</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="verdict">${nf.format(N)} vé trên ${H} kỳ. Chênh lệch giữa chiến lược và ngẫu nhiên: z = ${z.toFixed(2)}.
+      ${Math.abs(z) < 2
+        ? '<b>Không có khác biệt có ý nghĩa thống kê</b> — chiến lược này không dự đoán tốt hơn chọn bừa.'
+        : (z > 0
+          ? 'Chiến lược nhỉnh hơn ngẫu nhiên ở mẫu này, nhưng hãy thử đổi số kỳ/cửa sổ: nếu kết quả không ổn định thì đó chỉ là may mắn.'
+          : 'Chiến lược còn kém hơn ngẫu nhiên ở mẫu này — nhiều khả năng cũng chỉ là dao động.')}</div>`;
+}
+
+// ---------- expected value ----------
+const money = v => nf.format(Math.round(v)) + 'đ';
+const ty = v => (v / 1e9).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' tỷ';
+const oneIn = p => '1 / ' + nf.format(Math.round(1 / p));
+
+function prizeProb(g, key) {
+  const total = comb(g.max, PICK);
+  if (key === '5b') return PICK / total;
+  if (key === 5 && g.prizes.some(p => p.key === '5b')) return PICK * (g.max - PICK - 1) / total;
+  return comb(PICK, key) * comb(g.max - PICK, PICK - key) / total;
+}
+
+// Expected share of a jackpot when other winners arrive as Poisson(lambda).
+const shareOf = lambda => lambda > 1e-9 ? (1 - Math.exp(-lambda)) / lambda : 1;
+
+// Prize values from the latest official prize table when available, else the built-in ones.
+function prizesFor(game) {
+  const live = state.live?.[game]?.draw?.prizes || [];
+  return GAMES[game].prizes.map(p => {
+    const l = live.find(x => x.name === p.name);
+    return p.jackpot || !l ? p : { ...p, value: l.value };
+  });
+}
+
+// Tickets sold in the last draw ≈ winners of the small prizes / their probability.
+function estimateSold(game) {
+  const draw = state.live?.[game]?.draw;
+  if (!draw) return null;
+  const g = GAMES[game];
+  let winners = 0, prob = 0;
+  for (const p of g.prizes.filter(p => p.key === 3 || p.key === 4)) {
+    const l = draw.prizes.find(x => x.name === p.name);
+    if (l) { winners += l.winners; prob += prizeProb(g, p.key); }
+  }
+  return prob && winners ? { sold: winners / prob, draw } : null;
+}
+
+function expectedValue(g, { jackpot, jackpot2, sold, tax, crowd = 1 }) {
+  const total = comb(g.max, PICK);
+  const net = v => tax && v > 10e6 ? v - 0.1 * (v - 10e6) : v;
+  const game = Object.keys(GAMES).find(k => GAMES[k] === g);
+  const rows = prizesFor(game).map(p => {
+    const prob = prizeProb(g, p.key);
+    let value = p.value, share = 1;
+    if (p.jackpot) {
+      value = p.jackpot === 1 ? jackpot : jackpot2;
+      share = shareOf(sold * prob * crowd);
+    }
+    const got = net(value) * share;
+    return { ...p, prob, value, share, got, ev: prob * got };
+  });
+  const ev = sum(rows.map(r => r.ev));
+  // Jackpot needed for EV = price, everything else unchanged
+  const j = rows[0], rest = ev - j.ev;
+  const needNet = (PRICE - rest) / (j.prob * j.share);
+  const breakEven = tax ? (needNet - 1e6) / 0.9 : needNet;
+  const anyPrize = sum(rows.map(r => r.prob));
+  return { rows, ev, breakEven, anyPrize, total };
+}
+
+function evInputs() {
+  return {
+    jackpot: Math.max(0, +$('#jackpot').value || 0) * 1e9,
+    jackpot2: Math.max(0, +$('#jackpot2').value || 0) * 1e9,
+    sold: Math.max(0, +$('#sold').value || 0) * 1e6,
+    tax: $('#tax').checked,
+  };
+}
+
+function loadEvPrefs() {
+  const g = GAMES[state.game];
+  const saved = (store.get('vlp:ev') || {})[state.game] || {};
+  const live = state.live?.[state.game] || {};
+  const est = estimateSold(state.game);
+  const round2 = v => Math.round(v * 100) / 100;
+  $('#jackpot').value = live.jackpot ? round2(live.jackpot / 1e9) : saved.jackpot ?? g.jackpotMin;
+  $('#jackpot2').value = live.jackpot2 ? round2(live.jackpot2 / 1e9) : saved.jackpot2 ?? (g.jackpot2Min || '');
+  $('#sold').value = est ? round2(est.sold / 1e6) : saved.sold ?? g.sold;
+  $('#j2wrap').style.display = g.jackpot2Min ? '' : 'none';
+}
+
+function renderLiveNote() {
+  const live = state.live?.[state.game];
+  if (!live) {
+    $('#liveNote').innerHTML = 'Chưa có dữ liệu tự động — xem Jackpot hiện tại trên vietlott.vn và nhập tay.';
+    return;
+  }
+  const est = estimateSold(state.game);
+  const updated = state.live.updated ? new Date(state.live.updated).toLocaleString('vi-VN') : '?';
+  const d = live.draw;
+  const tiers = d ? d.prizes.map(p => `${nf.format(p.winners)} ${p.name}`).join(' · ') : '';
+  $('#liveNote').innerHTML = `<b>Tự động điền từ vietlott.vn</b> (cập nhật ${updated}); bạn vẫn có thể sửa tay.
+    ${d ? `<br>Kỳ #${d.id} (${fmtDate(d.date)}): ${tiers}.` : ''}
+    ${est ? ` Từ số vé trúng giải Nhì + Ba ước tính kỳ đó bán ~<b>${nf.format(Math.round(est.sold / 1e3) * 1e3)}</b> vé.` : ''}`;
+}
+
+function saveEvPrefs() {
+  const all = store.get('vlp:ev') || {};
+  all[state.game] = { jackpot: $('#jackpot').value, jackpot2: $('#jackpot2').value, sold: $('#sold').value };
+  store.set('vlp:ev', all);
+}
+
+function renderEV() {
+  const g = GAMES[state.game];
+  const inp = evInputs();
+  const E = expectedValue(g, inp);
+  const ret = E.ev / PRICE;
+  const nd = nextDraw(g.days);
+  $('#evSub').textContent = `· ${g.name}, kỳ ${nd.label}`;
+  renderLiveNote();
+  $('#prizeNote').textContent = prizesFor(state.game).map(p => `${p.name} (${p.cond})${p.value ? ' ' + money(p.value) : ''}`).join(', ') + ', vé ' + money(PRICE);
+  const verdict = ret >= 1
+    ? '<b>Kỳ này có lợi về kỳ vọng</b> — chuyện hiếm. Dù vậy gần như chắc chắn bạn vẫn không trúng Jackpot; chỉ chơi số tiền bạn sẵn sàng mất.'
+    : ret >= 0.6
+      ? '<b>Jackpot khá lớn</b> — nếu muốn chơi, đây là kỳ "đáng tiền" hơn bình thường, nhưng vẫn lỗ về kỳ vọng.'
+      : '<b>Kỳ vọng thấp</b> — phần lớn tiền vé không quay lại. Nếu chơi, hãy coi là giải trí và chơi ít.';
+  const n = Math.max(1, Math.min(20, +$('#count').value || 1));
+  const pop = expectedValue(g, { ...inp, crowd: 10 });
+  const rows = E.rows.map(r => `<tr><td>${r.name}<br><small>${r.cond}</small></td><td>${oneIn(r.prob)}</td>
+    <td>${money(r.got)}${r.share < 0.999 ? `<br><small>sau chia ~${Math.round(r.share * 100)}%</small>` : ''}</td><td>${money(r.ev)}</td></tr>`).join('');
+  $('#evOut').innerHTML = `
+    <div class="muted" style="font-size:13px">Mỗi vé ${money(PRICE)} có giá trị kỳ vọng</div>
+    <div class="big">${money(E.ev)} <small style="font-size:15px">(hoàn ${Math.round(ret * 100)}%)</small></div>
+    <div class="gauge"><i style="width:${Math.min(100, ret / 1.5 * 100)}%"></i><em style="left:${100 / 1.5}%"></em></div>
+    <div class="gauge-l"><span>0%</span><span>hòa vốn 100%</span><span>150%</span></div>
+    <div class="verdict">${verdict} Jackpot cần đạt khoảng <b>${E.breakEven > 0 ? ty(E.breakEven) : '—'}</b> để một vé hòa vốn về kỳ vọng
+      (với thuế và khả năng chia giải đang chọn).</div>
+    <div style="overflow-x:auto;margin-top:12px"><table>
+      <thead><tr><th>Giải</th><th>Xác suất</th><th>Nhận được</th><th>Đóng góp / vé</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <p class="explain">Mua ${n} vé (theo ô "Số vé" ở trên): chi ${money(n * PRICE)}, kỳ vọng nhận lại ${money(n * E.ev)},
+      xác suất trúng Jackpot ${oneIn(n / E.total)}, xác suất trúng ít nhất một giải ~${oneIn(1 - (1 - E.anyPrize) ** n)}.</p>
+    <p class="explain">Vì sao nên chọn bộ ít người chọn: nếu vé của bạn là bộ số phổ biến (giả sử có số người chọn gấp 10 lần mức trung bình),
+      phần Jackpot kỳ vọng còn ~${Math.round(pop.rows[0].share * 100)}% thay vì ~${Math.round(E.rows[0].share * 100)}%,
+      và giá trị vé giảm từ ${money(E.ev)} xuống ${money(pop.ev)}.</p>`;
+}
+
+// ---------- check your own ticket ----------
+function checkTicket() {
+  const { g, draws, win } = ctx();
+  const raw = ($('#myTicket').value.match(/\d+/g) || []).map(Number);
+  const nums = [...new Set(raw)].sort((a, b) => a - b);
+  const out = $('#checkOut');
+  if (nums.length !== PICK || nums.some(x => x < 1 || x > g.max)) {
+    out.innerHTML = `<p class="err">Cần đúng ${PICK} số khác nhau trong khoảng 1–${g.max}.</p>`;
+    return;
+  }
+  if (!draws.length) return;
+  const S = computeStats(draws, g.max, win);
+  const luck = luckFor(nextDraw(g.days).iso);
+  const p = popularity(nums, S), h = historyMatch(nums, draws);
+  const nLucky = luck ? nums.filter(x => luck.lucky.has(x)).length : null;
+  const tips = [];
+  if (p.level >= 2) tips.push('Thử đổi vài số nhỏ (≤ 31) sang số lớn hơn và phá các dãy/khuôn mẫu để giảm độ phổ biến.');
+  if (p.level <= 1) tips.push('Bộ số này khá "lạ" — nếu trúng, khả năng phải chia giải thấp.');
+  out.innerHTML = `
+    <div class="balls">${nums.map(x => ballHtml(x, S, luck)).join('')}</div>
+    <div class="meta" style="margin-bottom:6px">${popBadge(p)}</div>
+    ${p.reasons.length ? `<div class="why">Dễ trùng người khác vì: ${p.reasons.join(', ')}</div>` : '<div class="why">Không thấy khuôn mẫu phổ biến nào.</div>'}
+    <div class="meta" style="margin-top:6px">Tổng ${sum(nums)} · lịch sử ${nf.format(draws.length)} kỳ: khớp tối đa ${h.best} số${h.best ? ` (${fmtDate(h.bestDate)})` : ''}, ${h.three} lần khớp ≥ 3 số
+      ${nLucky !== null ? ` · ${nLucky} số may mắn theo thần số học` : ''}</div>
+    <p class="explain">Xác suất trúng Jackpot của bộ này vẫn là ${oneIn(1 / comb(g.max, PICK))}, như mọi bộ khác. ${tips.join(' ')}</p>`;
+}
+
+function renderAll() {
+  const { g, draws, win } = ctx();
+  document.documentElement.dataset.game = state.game;
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.game === state.game));
+  renderStatus();
+  renderNumerology();
+  renderEV();
+  $('#checkOut').innerHTML = '';
+  if (!draws.length) {
+    ['#tickets', '#numgrid', '#recent', '#freqChart', '#pairs', '#sumChart', '#dists', '#btResult', '#chi'].forEach(s => $(s).innerHTML = '');
+    return;
+  }
+  const S = computeStats(draws, g.max, win), R = structure(draws, g.max);
+  renderGrid(S);
+  renderRecent();
+  renderFreqChart(S);
+  renderPairs(win);
+  renderDists(R);
+  renderChi();
+  $('#btResult').innerHTML = '';
+  generateTickets();
+}
+
+function savePrefs() {
+  store.set('vlp:prefs', { game: state.game, strategy: $('#strategy').value, window: $('#window').value, count: $('#count').value });
+}
+
+async function switchGame(game) {
+  state.game = game;
+  savePrefs();
+  loadEvPrefs();
+  await loadGame(game);
+  renderAll();
+}
+
+// ---------- events ----------
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => switchGame(b.dataset.game));
+document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
+  state.gridMode = b.dataset.mode;
+  document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  const { g, draws, win } = ctx();
+  if (draws.length) renderGrid(computeStats(draws, g.max, win));
+});
+$('#strategy').onchange = () => { $('#stratExplain').textContent = STRAT_TEXT[$('#strategy').value]; savePrefs(); generateTickets(); };
+$('#window').onchange = () => { savePrefs(); renderAll(); };
+['#optStruct', '#optBirthday', '#optDaily'].forEach(s => $(s).onchange = generateTickets);
+$('#count').onchange = () => { savePrefs(); generateTickets(); renderEV(); };
+['#jackpot', '#jackpot2', '#sold', '#tax'].forEach(s => $(s).oninput = () => { saveEvPrefs(); renderEV(); });
+$('#checkBt').onclick = checkTicket;
+$('#myTicket').onkeydown = e => { if (e.key === 'Enter') checkTicket(); };
+$('#gen').onclick = generateTickets;
+['#birth', '#fullname'].forEach(s => $(s).onchange = () => {
+  store.set('vlp:me', me());
+  renderNumerology();
+  generateTickets();
+});
+$('#runBt').onclick = runBacktest;
+$('#reload').onclick = async () => { await loadGame(state.game, true); renderAll(); };
+$('#copy').onclick = async () => {
+  const list = state.tickets[state.game] || [];
+  const text = `${GAMES[state.game].name} — ${nextDraw(GAMES[state.game].days).label}\n` +
+    list.map((t, i) => `Vé ${i + 1}: ${t.nums.map(pad).join(' ')}`).join('\n');
+  try { await navigator.clipboard.writeText(text); $('#copy').textContent = 'Đã chép ✓'; }
+  catch { prompt('Sao chép thủ công:', text); }
+  setTimeout(() => $('#copy').textContent = 'Sao chép', 1500);
+};
+$('#importFile').onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const draws = parseData(await file.text(), GAMES[state.game].max);
+  if (draws.length < 20) { alert(`Chỉ đọc được ${draws.length} kỳ hợp lệ cho ${GAMES[state.game].name}.`); return; }
+  state.draws[state.game] = draws;
+  state.source[state.game] = 'file';
+  renderAll();
+};
+
+// ---------- section nav ----------
+const navLinks = [...document.querySelectorAll('.nav .links a')];
+const navSections = navLinks.map(a => document.querySelector(a.getAttribute('href')));
+let spyQueued = false, spyCurrent = -1, spyClicked = -1;
+function updateSpy() {
+  spyQueued = false;
+  // the section whose top most recently passed under the nav; side-by-side cards resolve to the
+  // left one, unless the right one was just picked from the nav
+  let current = 0, bestTop = -Infinity;
+  navSections.forEach((sec, i) => {
+    const top = sec.getBoundingClientRect().top;
+    if (top <= 90 && top > bestTop + 1) { bestTop = top; current = i; }
+  });
+  if (spyClicked >= 0 && Math.abs(navSections[spyClicked].getBoundingClientRect().top - bestTop) <= 1) current = spyClicked;
+  if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) current = navSections.length - 1;
+  $('#totop').classList.toggle('show', scrollY > 600);
+  if (current === spyCurrent) return;
+  spyCurrent = current;
+  navLinks.forEach((a, i) => a.classList.toggle('active', i === current));
+  const a = navLinks[current], box = a.parentElement;
+  box.scrollLeft = a.offsetLeft - box.offsetLeft - box.clientWidth / 2 + a.offsetWidth / 2;
+}
+addEventListener('scroll', () => {
+  if (!spyQueued) { spyQueued = true; requestAnimationFrame(updateSpy); }
+}, { passive: true });
+addEventListener('resize', updateSpy);
+['wheel', 'touchstart', 'keydown'].forEach(t => addEventListener(t, () => { spyClicked = -1; }, { passive: true }));
+navLinks.forEach((a, i) => a.onclick = e => {
+  e.preventDefault();
+  spyClicked = i;
+  navSections[i].scrollIntoView({ block: 'start' });
+});
+$('#totop').onclick = () => scrollTo({ top: 0 });
+
+(async () => {
+  const saved = store.get('vlp:me');
+  if (saved) { $('#birth').value = saved.birth || ''; $('#fullname').value = saved.name || ''; }
+  const p = store.get('vlp:prefs');
+  if (p) {
+    if (GAMES[p.game]) state.game = p.game;
+    if (p.strategy) $('#strategy').value = p.strategy;
+    if (p.window) $('#window').value = p.window;
+    if (p.count) $('#count').value = p.count;
+  }
+  $('#stratExplain').textContent = STRAT_TEXT[$('#strategy').value];
+  await loadLive();
+  await switchGame(state.game);
+  updateSpy();
+})();
+</script>
+</body>
+</html>

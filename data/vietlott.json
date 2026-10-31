@@ -1,0 +1,67 @@
+{
+  "updated": "2026-10-31T09:48:08Z",
+  "mega645": {
+    "jackpot": 20852928000,
+    "draw": {
+      "id": "01582",
+      "date": "2026-10-30",
+      "prizes": [
+        {
+          "name": "Jackpot",
+          "winners": 0,
+          "value": 20852928000
+        },
+        {
+          "name": "Giải Nhất",
+          "winners": 25,
+          "value": 10000000
+        },
+        {
+          "name": "Giải Nhì",
+          "winners": 1160,
+          "value": 300000
+        },
+        {
+          "name": "Giải Ba",
+          "winners": 22278,
+          "value": 30000
+        }
+      ]
+    }
+  },
+  "power655": {
+    "jackpot": 33944640150,
+    "jackpot2": 4675557550,
+    "draw": {
+      "id": "01417",
+      "date": "2026-10-29",
+      "prizes": [
+        {
+          "name": "Jackpot 1",
+          "winners": 0,
+          "value": 33944640150
+        },
+        {
+          "name": "Jackpot 2",
+          "winners": 0,
+          "value": 4675557550
+        },
+        {
+          "name": "Giải Nhất",
+          "winners": 18,
+          "value": 40000000
+        },
+        {
+          "name": "Giải Nhì",
+          "winners": 837,
+          "value": 500000
+        },
+        {
+          "name": "Giải Ba",
+          "winners": 16183,
+          "value": 50000
+        }
+      ]
+    }
+  }
+}
