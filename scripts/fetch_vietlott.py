@@ -1,13 +1,17 @@
 """Fetch current jackpots and the latest prize table from vietlott.vn into a JSON file.
 
-Usage: python scripts/fetch_vietlott.py data/vietlott.json
+Usage: python scripts/fetch_vietlott.py [data/vietlott.json] [--push]
 
-Standard library only, so it runs on a bare GitHub Actions runner. The file is rewritten only
-when the data itself changes, so scheduled runs don't create empty commits.
+Run it from your own machine: vietlott.vn sits behind Cloudflare, which refuses requests from
+cloud servers such as GitHub Actions. Standard library only. The file is rewritten only when
+the data itself changes; with --push, a change is also committed and pushed so the app picks
+it up from the repo.
 """
+import argparse
 import html
 import json
 import re
+import subprocess
 import sys
 import urllib.request
 from datetime import datetime, timezone
@@ -84,16 +88,36 @@ def main(out_path):
     if all(v is None for g in data.values() for v in g.values()):
         sys.exit("Nothing could be parsed from vietlott.vn - the page layout may have changed.")
 
-    if {k: v for k, v in old.items() if k != "updated"} == data:
-        print("No change.")
-    else:
-        data = {"updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), **data}
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"Updated {out}.")
     if problems:
         print("Could not parse: " + ", ".join(problems), file=sys.stderr)
+    if {k: v for k, v in old.items() if k != "updated"} == data:
+        print("No change.")
+        return False
+    data = {"updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), **data}
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    for game in GAMES:
+        g, d = data[game], data[game].get("draw") or {}
+        jackpots = " / ".join(f"{v / 1e9:,.2f} tỷ" for k, v in g.items() if k.startswith("jackpot") and v)
+        print(f"{game}: jackpot {jackpots} · kỳ #{d.get('id', '?')} ({d.get('date', '?')})")
+    print(f"Updated {out}.")
+    return True
+
+
+def push(out_path):
+    repo = Path(__file__).resolve().parent.parent
+    path = str(Path(out_path).resolve())
+    git = lambda *args: subprocess.run(["git", *args], cwd=repo, check=True)
+    git("add", path)
+    git("commit", "-m", f"data: update vietlott {datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}", "--", path)
+    git("push")
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "data/vietlott.json")
+    sys.stdout.reconfigure(encoding="utf-8")
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("out", nargs="?", default=str(Path(__file__).resolve().parent.parent / "data" / "vietlott.json"))
+    parser.add_argument("--push", action="store_true", help="commit and push data/vietlott.json if it changed")
+    args = parser.parse_args()
+    if main(args.out) and args.push:
+        push(args.out)
