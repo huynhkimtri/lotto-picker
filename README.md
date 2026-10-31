@@ -26,7 +26,7 @@ Script lấy Jackpot ước tính và bảng giải kỳ gần nhất, ghi vào 
 thì commit + push file đó. Bỏ `--push` nếu chỉ muốn cập nhật file trên máy.
 
 App đọc file này từ `LIVE_URL` trong `index.html`
-(`https://raw.githubusercontent.com/huynhkimtri/vietlott-picker/main/data/vietlott.json`), hoặc từ
+(`https://raw.githubusercontent.com/huynhkimtri/lotto-picker/main/data/vietlott.json`), hoặc từ
 `data/vietlott.json` cùng thư mục khi app được phục vụ qua http(s).
 
 Nếu vietlott.vn đổi giao diện, script sẽ giữ giá trị cũ cho phần không đọc được (và báo lỗi nếu không đọc được gì),
