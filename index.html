@@ -453,6 +453,13 @@ function comb(n, k) {
 }
 
 // ---------- data ----------
+// Everything loaded from outside (GitHub data, imported files, cached copies) is validated into
+// plain numbers and fixed-format strings before use, and free text is escaped when rendered.
+const esc = s => String(s).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+const isDate = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+const drawId = s => /^\d{1,8}$/.test(String(s ?? '')) ? String(s) : '';
+const num = v => typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null;
+
 function parseData(text, max) {
   const out = [], seen = new Set();
   for (const raw of text.split(/\r?\n/)) {
@@ -470,13 +477,15 @@ function parseData(text, max) {
       date = m[1] ? `${m[1]}-${m[2]}-${m[3]}` : `${m[6]}-${m[5]}-${m[4]}`;
       nums = (line.replace(m[0], '').match(/\d+/g) || []).map(Number);
     }
-    if (!date || !Array.isArray(nums) || nums.length < PICK) continue;
-    const main = nums.slice(0, PICK).map(Number);
-    if (main.some(x => !(x >= 1 && x <= max)) || new Set(main).size !== PICK) continue;
+    if (!isDate(date) || !Array.isArray(nums) || nums.length < PICK) continue;
+    const valid = x => Number.isInteger(x) && x >= 1 && x <= max;
+    const main = nums.slice(0, PICK);
+    if (!main.every(valid) || new Set(main).size !== PICK) continue;
+    id = drawId(id);
     const key = id || date + main.join();
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ date, id: id || '', nums: main.sort((a, b) => a - b), bonus: nums[PICK] ?? null });
+    out.push({ date, id, nums: [...main].sort((a, b) => a - b), bonus: valid(nums[PICK]) ? nums[PICK] : null });
   }
   out.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
   return out;
@@ -508,6 +517,26 @@ async function loadGame(game, force = false) {
   }
 }
 
+function sanitizeLive(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const iso = typeof raw.updated === 'string' && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(raw.updated);
+  const live = { updated: iso ? raw.updated : null };
+  for (const game of Object.keys(GAMES)) {
+    const g = raw[game];
+    if (!g || typeof g !== 'object') continue;
+    const d = g.draw;
+    const draw = d && isDate(d.date) && Array.isArray(d.prizes) ? {
+      id: drawId(d.id),
+      date: d.date,
+      prizes: d.prizes
+        .filter(p => p && typeof p.name === 'string' && num(p.winners) !== null && num(p.value) !== null)
+        .map(p => ({ name: p.name.slice(0, 40), winners: p.winners, value: p.value })),
+    } : null;
+    live[game] = { jackpot: num(g.jackpot), jackpot2: num(g.jackpot2), draw };
+  }
+  return live.mega645 || live.power655 ? live : null;
+}
+
 async function loadLive() {
   const urls = [];
   if (location.protocol.startsWith('http')) urls.push('data/vietlott.json');
@@ -516,14 +545,14 @@ async function loadLive() {
     try {
       const res = await fetch(url, { cache: 'no-cache' });
       if (!res.ok) continue;
-      const live = await res.json();
-      if (!live.mega645 && !live.power655) continue;
+      const live = sanitizeLive(await res.json());
+      if (!live) continue;
       state.live = live;
       store.set('vlp:live', live);
       return;
     } catch {}
   }
-  state.live = store.get('vlp:live');
+  state.live = sanitizeLive(store.get('vlp:live'));
 }
 
 // ---------- analysis ----------
@@ -820,14 +849,14 @@ function renderStatus() {
   $('#pickTitle').textContent = `Bộ số gợi ý cho kỳ quay ${nd.label}${nd.today ? ' (hôm nay, 18:00)' : ''}`;
   $('#odds').textContent = '1 / ' + nf.format(comb(g.max, PICK));
   if (!draws.length) {
-    $('#status').innerHTML = `<span class="err">Không tải được dữ liệu (${src.replace('error:', '')}). Hãy thử "Tải lại" hoặc nhập file ở cuối trang.</span>`;
+    $('#status').innerHTML = `<span class="err">Không tải được dữ liệu (${esc(src.replace('error:', ''))}). Hãy thử "Tải lại" hoặc nhập file ở cuối trang.</span>`;
     return;
   }
   const last = draws[draws.length - 1];
   let note = '';
-  if (src.startsWith('cache:')) note = ` · <span class="err">offline, dùng bản lưu ${src.slice(6)}</span>`;
+  if (src.startsWith('cache:')) note = ` · <span class="err">offline, dùng bản lưu ${esc(src.slice(6))}</span>`;
   if (src === 'file') note = ' · nguồn: file bạn nhập';
-  $('#status').innerHTML = `${nf.format(draws.length)} kỳ · ${fmtDate(draws[0].date)} → ${fmtDate(last.date)} · kỳ mới nhất #${last.id || '—'}${note}`;
+  $('#status').innerHTML = `${nf.format(draws.length)} kỳ · ${fmtDate(draws[0].date)} → ${fmtDate(last.date)} · kỳ mới nhất #${esc(last.id || '—')}${note}`;
 }
 
 function renderTickets(S, luck) {
@@ -906,7 +935,7 @@ function renderGrid(S) {
 function renderRecent() {
   const { draws } = ctx();
   $('#recent').innerHTML = draws.slice(-10).reverse().map(d => `<li>
-    <span class="d">${fmtDate(d.date)}<br>#${d.id}</span>
+    <span class="d">${fmtDate(d.date)}<br>#${esc(d.id)}</span>
     <span class="balls">${d.nums.map(x => `<span class="ball sm">${pad(x)}</span>`).join('')}${
       d.bonus && state.game === 'power655' ? `<span class="ball sm bonus" title="Số đặc biệt (Jackpot 2)">${pad(d.bonus)}</span>` : ''}</span>
   </li>`).join('');
@@ -1162,9 +1191,9 @@ function renderLiveNote() {
   const est = estimateSold(state.game);
   const updated = state.live.updated ? new Date(state.live.updated).toLocaleString('vi-VN') : '?';
   const d = live.draw;
-  const tiers = d ? d.prizes.map(p => `${nf.format(p.winners)} ${p.name}`).join(' · ') : '';
+  const tiers = d ? d.prizes.map(p => `${nf.format(p.winners)} ${esc(p.name)}`).join(' · ') : '';
   $('#liveNote').innerHTML = `<b>Tự động điền từ vietlott.vn</b> (cập nhật ${updated}); bạn vẫn có thể sửa tay.
-    ${d ? `<br>Kỳ #${d.id} (${fmtDate(d.date)}): ${tiers}.` : ''}
+    ${d ? `<br>Kỳ #${esc(d.id)} (${fmtDate(d.date)}): ${tiers}.` : ''}
     ${est ? ` Từ số vé trúng giải Nhì + Ba ước tính kỳ đó bán ~<b>${nf.format(Math.round(est.sold / 1e3) * 1e3)}</b> vé.` : ''}`;
 }
 
