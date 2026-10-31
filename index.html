@@ -391,9 +391,8 @@ const GAMES = {
 const PRICE = 10000;
 // Jackpots and the latest prize table, written by .github/workflows/update-data.yml.
 // When the page is served over http(s) next to data/vietlott.json it is found automatically;
-// when opened as a local file, put your repo's raw URL here, e.g.
-// 'https://raw.githubusercontent.com/<user>/<repo>/main/data/vietlott.json'
-const LIVE_URL = '';
+// when opened as a local file, it is read from the repo's raw URL.
+const LIVE_URL = 'https://raw.githubusercontent.com/huynhkimtri/vietlott-picker/main/data/vietlott.json';
 const PICK = 6;
 const SRC = f => `https://raw.githubusercontent.com/vietvudanh/vietlott-data/master/data/${f}.jsonl`;
 const WEEKDAYS = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
