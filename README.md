@@ -32,6 +32,11 @@ App đọc file này từ `LIVE_URL` trong `index.html`
 Nếu vietlott.vn đổi giao diện, script sẽ giữ giá trị cũ cho phần không đọc được (và báo lỗi nếu không đọc được gì),
 còn app tự quay về chế độ nhập tay.
 
+## Bản quyền
+
+© 2026 Huỳnh Kim Trí. Bảo lưu mọi quyền. Bạn được xem mã nguồn và dùng app cho mục đích cá nhân,
+nhưng không được sao chép, chỉnh sửa hay phát hành lại khi chưa được phép. Xem [LICENSE](LICENSE).
+
 ## Lưu ý
 
 Mỗi kỳ quay là độc lập; mọi bộ số có cùng xác suất trúng. App mô tả quá khứ và giúp tránh các bộ số phổ biến

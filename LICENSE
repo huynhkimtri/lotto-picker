@@ -1,0 +1,29 @@
+Copyright (c) 2026 Huỳnh Kim Trí. All rights reserved.
+
+This repository and its contents (including index.html, scripts/ and all source code, text and
+design) are the property of the copyright holder.
+
+You may view the source code and use the hosted web app for your own personal, non-commercial
+purposes. Except as required by the GitHub Terms of Service (which allow viewing and forking on
+GitHub), you may NOT, without prior written permission from the copyright holder:
+
+  - copy, reproduce or republish the source code, in whole or in part;
+  - modify it or create derivative works based on it;
+  - distribute, sublicense, sell or host it, or any modified version, elsewhere;
+  - present it, or any part of it, as your own work.
+
+Lottery result data comes from third parties (vietlott.vn and github.com/vietvudanh/vietlott-data)
+and remains subject to their own terms. This license covers only the work of the copyright holder.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. IT DOES NOT PREDICT LOTTERY
+RESULTS, AND THE COPYRIGHT HOLDER IS NOT LIABLE FOR ANY LOSS ARISING FROM ITS USE.
+
+---
+
+Bản quyền (c) 2026 Huỳnh Kim Trí. Bảo lưu mọi quyền.
+
+Bạn được xem mã nguồn và dùng web app cho mục đích cá nhân, phi thương mại. Ngoài những gì Điều
+khoản dịch vụ của GitHub cho phép (xem và fork trên GitHub), bạn KHÔNG được sao chép, chỉnh sửa,
+phát hành lại, triển khai ở nơi khác hay nhận là sản phẩm của mình khi chưa có sự đồng ý bằng văn
+bản của chủ sở hữu bản quyền. Dữ liệu xổ số thuộc về các bên cung cấp. Phần mềm được cung cấp
+"nguyên trạng", không dự đoán kết quả xổ số và không chịu trách nhiệm cho bất kỳ thiệt hại nào.
